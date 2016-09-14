@@ -38,7 +38,7 @@ SDL2Sink::SDL2Sink() : impl(std::make_unique<Impl>()) {
     desired_audiospec.format = AUDIO_S16;
     desired_audiospec.channels = 2;
     desired_audiospec.freq = native_sample_rate;
-    desired_audiospec.samples = 1024;
+    desired_audiospec.samples = 512;
     desired_audiospec.userdata = impl.get();
     desired_audiospec.callback = &Impl::Callback;
 
@@ -71,14 +71,12 @@ unsigned int SDL2Sink::GetNativeSampleRate() const {
     return impl->sample_rate;
 }
 
-void SDL2Sink::EnqueueSamples(const std::vector<s16>& samples) {
+void SDL2Sink::EnqueueSamples(const s16* samples, size_t sample_count) {
     if (impl->audio_device_id <= 0)
         return;
 
-    ASSERT_MSG(samples.size() % 2 == 0, "Samples must be in interleaved stereo PCM16 format (size must be a multiple of two)");
-
     SDL_LockAudioDevice(impl->audio_device_id);
-    impl->queue.emplace_back(samples);
+    impl->queue.emplace_back(samples, samples + sample_count * 2);
     SDL_UnlockAudioDevice(impl->audio_device_id);
 }
 
